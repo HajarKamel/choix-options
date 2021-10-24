@@ -1,0 +1,136 @@
+using System;
+using System.Collections.Generic;
+
+namespace StableMarriage
+{
+    class MainClass
+    {
+        public static void Main(string[] args)
+        {
+            var student = new List<Student>()
+            {
+                new Student ('A', new List<char>("IHJGF")),
+                new Student ('B', new List<char>("FHJGI")),
+                new Student ('C', new List<char>("HGJFI")),
+                new Student ('D', new List<char>("HIFJG")),
+                new Student ('E', new List<char>("JFHGI")),
+            };
+            var option = new List<Option>()
+            {
+                new Option('F', new List<char>("BECAD")),
+                new Option('G', new List<char>("DECAB")),
+                new Option('H', new List<char>("ECDAB")),
+                new Option('I', new List<char>("BECDA")),
+                new Option('J', new List<char>("DCBAE")),
+            };
+
+            var lonelyGuys = new List<Student>(student);
+
+            // Carry on until there are no lonely guys anymore.
+            while (lonelyGuys.Count > 0)
+            {
+                // Just go trough the womens again and again.
+                for (int i = 0; i < option.Count; i++)
+                {
+                    // Create a list of the men, who want the women. 
+                    var bachelors = new List<Student>();
+                    // Add the lonely guys, who want to propose to the women.
+                    for (int j = 0; j < lonelyGuys.Count; j++)
+                    {
+                        if (lonelyGuys[j].NextChoiceNom == option[i].Nom)
+                        {
+                            bachelors.Add(lonelyGuys[j]);
+                            lonelyGuys[j].NextChoiceTried();
+                        }
+                    }
+
+                    if (bachelors.Count > 0)
+                    {
+                        // Give the Husband a chance to prove himself again.
+                        if (option[i].Partner != null)
+                        {
+                            bachelors.Add(option[i].Partner);
+                            lonelyGuys.Add(option[i].Partner);
+                            option[i].Partner = null;
+                        }
+                        // Let the women choose.
+                        option[i].Partner = bachelors[0];
+                        for (int j = 1; j < bachelors.Count; j++)
+                        {
+                            var keepPartner = true;
+                            for (int k = 0; k < option[i].Prefe.Count; k++)
+                            {
+                                if (option[i].Prefe[k] == option[i].Partner.Nom)
+                                {
+                                    keepPartner = true;
+                                    break;
+                                }
+                                else if (option[i].Prefe[k] == bachelors[j].Nom)
+                                {
+                                    keepPartner = false;
+                                    break;
+                                }
+                            }
+                            if (!keepPartner)
+                            {
+                                option[i].Partner = bachelors[j];
+                            }
+                        }
+                        lonelyGuys.Remove(option[i].Partner);
+                    }
+                }
+            }
+
+            // Write the pairs to console
+            for (int i = 0; i < option.Count; i++)
+            {
+                Console.WriteLine(option[i].Nom + " : " + option[i].Partner.Nom + " " + student.Count);
+            }
+        }
+    }
+
+    public class Student
+    {
+        public List<char> Prefe { get; set; }
+        public char Nom { get; set; }
+
+        public Student(char nom, List<char> prefe)
+        {
+            Nom = nom;
+            Prefe = prefe;
+        }
+        
+    }
+   
+
+    public class Option : Student
+    {
+    public Student Partner { get; set; }
+    public HashSet<char> ChoicesTried { get; set; } = new HashSet<char>();
+        public char? NextChoiceNom
+        {
+            get
+            {
+                char? choiceNom= null;
+
+                for (int i = 0; i < Prefe.Count; i++)
+                {
+                    if (!ChoicesTried.Contains(Prefe[i]))
+                    {
+                        choiceNom= Prefe[i];
+                        break;
+                    }
+                }
+                return choiceNom;
+            }
+        }
+       
+
+        public Student (char nom, List<char> prefe) : base(nom, prefe) { }
+
+        public void NextChoiceTried()
+        {
+            ChoicesTried.Add((char)NextChoiceNom);
+        }
+    }
+}
